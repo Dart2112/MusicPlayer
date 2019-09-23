@@ -31,10 +31,12 @@ class MusicPlayer implements BasicPlayerListener {
                 try {
                     switch (input.split(" ")[0]) {
                         case "play":
-                            player.play();
+                            player.resume();
+                            System.out.println("Resumed playback");
                             break;
                         case "pause":
                             player.pause();
+                            System.out.println("Paused playback");
                             break;
                         case "skip":
                         case "next":
@@ -48,7 +50,9 @@ class MusicPlayer implements BasicPlayerListener {
                             volume = i / 100f;
                             player.setGain(volume);
                             break;
+                        case "stop":
                         case "kill":
+                            player.stop();
                             System.exit(0);
                             break;
                         default:
@@ -56,6 +60,8 @@ class MusicPlayer implements BasicPlayerListener {
                     }
                 } catch (BasicPlayerException e) {
                     e.printStackTrace();
+                } catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
+                    System.out.println("Please enter a valid volume (0-100)");
                 }
             }
         };
@@ -78,24 +84,24 @@ class MusicPlayer implements BasicPlayerListener {
             repopulatePlaylist();
         }
         Song s = (Song) playlist.get(0);
+        System.out.println("Now Playing: " + s.getTitle() + " - " + s.getArtist(false));
         if (playlist.size() == 1) {
             new Thread(this::repopulatePlaylist).start();
         }
-        System.out.println("Now Playing: " + s.getTitle() + " - " + s.getArtist(false));
         startSongPlayback(s);
         playlist.remove(s);
     }
 
     private void repopulatePlaylist() {
-        System.out.print("Shuffling to get the next 10 songs, skipping now may cause errors \r");
+        System.out.print("Shuffling to get the next 20 songs, skipping now may cause errors \r");
         List<Shuffleable> songList = new ArrayList<>();
         //noinspection ConstantConditions
         for (File f : new File(musicPath).listFiles()) {
             if (f.getName().endsWith("mp3"))
                 songList.add(new SongBuilder().fromFile(f).build());
         }
-        playlist = new PartialShuffle().shuffle(songList, 20f, 10);
-        System.out.print("Shuffle complete, it is now safe to skip \r");
+        playlist = new PartialShuffle().shuffle(songList, 20f, 20);
+        System.out.println("Shuffle complete, it is now safe to skip tracks");
     }
 
     public void stateUpdated(BasicPlayerEvent event) {
