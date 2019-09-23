@@ -16,3 +16,6 @@ Features I would like to have:
 - Be able to deal with thousands of songs
 - Maybe a playlist feature (This is more unlikly but would be nice)
 - A robust system that allows songs to move, maybe an ID made from the song title and file size. This would allow artists to be changed without breaking playlists
+
+Notes:
+https://stackoverflow.com/a/22305518
