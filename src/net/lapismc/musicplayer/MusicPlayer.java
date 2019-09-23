@@ -3,25 +3,54 @@ package net.lapismc.musicplayer;
 import javazoom.jlgui.basicplayer.BasicPlayer;
 import javazoom.jlgui.basicplayer.BasicPlayerException;
 
-import java.io.File;
+import java.util.Scanner;
 
 class MusicPlayer {
 
     private BasicPlayer player = new BasicPlayer();
-    private String songPath = "/home/benjamin/Music/Africa - Toto.mp3";
+    private String songPath = "/home/benjamin/Music/7 Minutes - Dean Lewis.mp3";
 
     MusicPlayer() {
-        try {
-            player.open(new File(songPath));
-            player.play();
-        } catch (BasicPlayerException e) {
-            e.printStackTrace();
-        }
-        try {
-            Thread.sleep(1000 * 5);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        new Thread(commandRunnable()).start();
+        //TODO: load and shuffle songs
+        startSongPlayback(new SongBuilder().atPath(songPath).build());
+    }
+
+    private Runnable commandRunnable() {
+        return () -> {
+            Scanner scan = new Scanner(System.in);
+            while (true) {
+                String input = scan.nextLine();
+                try {
+                    switch (input.split(" ")[0]) {
+                        case "play":
+                            player.play();
+                            break;
+                        case "pause":
+                            player.pause();
+                            break;
+                        case "kill":
+                            System.exit(0);
+                            break;
+                        default:
+                            System.out.println("Command Unknown");
+                    }
+                } catch (BasicPlayerException e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+    }
+
+    private void startSongPlayback(Song song) {
+        new Thread(() -> {
+            try {
+                player.open(song.getFile());
+                player.play();
+            } catch (BasicPlayerException e) {
+                e.printStackTrace();
+            }
+        }).start();
     }
 
     /*TODO
