@@ -1,19 +1,26 @@
 package net.lapismc.musicplayer;
 
-import javazoom.jlgui.basicplayer.BasicPlayer;
-import javazoom.jlgui.basicplayer.BasicPlayerException;
+import javazoom.jlgui.basicplayer.*;
+import net.lapismc.shuffle.PartialShuffle;
+import net.lapismc.shuffle.Shuffleable;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 
-class MusicPlayer {
+class MusicPlayer implements BasicPlayerListener {
 
     private BasicPlayer player = new BasicPlayer();
-    private String songPath = "/home/benjamin/Music/7 Minutes - Dean Lewis.mp3";
+    private List<Shuffleable> playlist = new ArrayList<>();
+    private float volume = 0.25f;
+    private String musicPath = "/home/benjamin/Music/";
 
     MusicPlayer() {
+        player.addBasicPlayerListener(this);
         new Thread(commandRunnable()).start();
-        //TODO: load and shuffle songs
-        startSongPlayback(new SongBuilder().atPath(songPath).build());
+        playNextSong();
     }
 
     private Runnable commandRunnable() {
@@ -28,6 +35,18 @@ class MusicPlayer {
                             break;
                         case "pause":
                             player.pause();
+                            break;
+                        case "skip":
+                        case "next":
+                        case ">":
+                            player.stop();
+                            playNextSong();
+                            break;
+                        case "volume":
+                        case "v":
+                            float i = Float.parseFloat(input.split(" ")[1]);
+                            volume = i / 100f;
+                            player.setGain(volume);
                             break;
                         case "kill":
                             System.exit(0);
@@ -47,10 +66,53 @@ class MusicPlayer {
             try {
                 player.open(song.getFile());
                 player.play();
+                player.setGain(volume);
             } catch (BasicPlayerException e) {
                 e.printStackTrace();
             }
         }).start();
+    }
+
+    private void playNextSong() {
+        if (playlist.isEmpty()) {
+            repopulatePlaylist();
+        }
+        Song s = (Song) playlist.get(0);
+        if (playlist.size() == 1) {
+            new Thread(this::repopulatePlaylist).start();
+        }
+        System.out.println("Now Playing: " + s.getTitle() + " - " + s.getArtist(false));
+        startSongPlayback(s);
+        playlist.remove(s);
+    }
+
+    private void repopulatePlaylist() {
+        System.out.print("Shuffling to get the next 10 songs, skipping now may cause errors \r");
+        List<Shuffleable> songList = new ArrayList<>();
+        //noinspection ConstantConditions
+        for (File f : new File(musicPath).listFiles()) {
+            if (f.getName().endsWith("mp3"))
+                songList.add(new SongBuilder().fromFile(f).build());
+        }
+        playlist = new PartialShuffle().shuffle(songList, 20f, 10);
+        System.out.print("Shuffle complete, it is now safe to skip \r");
+    }
+
+    public void stateUpdated(BasicPlayerEvent event) {
+        if (event.getCode() == BasicPlayerEvent.EOM) {
+            playNextSong();
+        }
+    }
+
+    public void opened(Object o, Map map) {
+
+    }
+
+    public void progress(int bytesread, long microseconds, byte[] pcmdata, Map properties) {
+    }
+
+    public void setController(BasicController var1) {
+
     }
 
     /*TODO
