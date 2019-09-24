@@ -15,7 +15,9 @@ class MusicPlayer implements BasicPlayerListener {
     private BasicPlayer player = new BasicPlayer();
     private List<Shuffleable> playlist = new ArrayList<>();
     private boolean volumeFading = false;
+    private boolean panFading;
     private float volume = 0.25f;
+    private float pan = 0.5f;
     private String musicPath = "/home/benjamin/Music/";
 
     MusicPlayer() {
@@ -48,7 +50,12 @@ class MusicPlayer implements BasicPlayerListener {
                         case "volume":
                         case "v":
                             float i = Float.parseFloat(input.split(" ")[1]);
-                            fadeToGain(i / 100f);
+                            fade(i / 100f, true);
+                            break;
+                        case "pan":
+                        case "p":
+                            float j = Float.parseFloat(input.split(" ")[1]);
+                            fade(j / 100f, false);
                             break;
                         case "stop":
                         case "kill":
@@ -58,33 +65,59 @@ class MusicPlayer implements BasicPlayerListener {
                         default:
                             System.out.println("Command Unknown");
                     }
-                } catch (BasicPlayerException | InterruptedException e) {
-                    e.printStackTrace();
-                } catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
+                } catch (BasicPlayerException | InterruptedException | IllegalArgumentException ignored) {
+
+                } catch (ArrayIndexOutOfBoundsException e) {
                     System.out.println("Please enter a valid volume (0-100)");
                 }
             }
         };
     }
 
-    private void fadeToGain(float target) throws BasicPlayerException, InterruptedException {
-        target = Math.max(0.01f, Math.min(1.0f, target));
-        int steps = 25;
-        while (volumeFading) {
-            Thread.sleep(100);
+    private void fade(float target, boolean gain) throws BasicPlayerException, InterruptedException {
+        if (gain) {
+            target = Math.max(0.01f, Math.min(1.0f, target));
+        } else {
+            target = Math.max(-1.0f, Math.min(1.0f, target));
         }
-        volumeFading = true;
+        int steps = 25;
+        float changeAmount;
         float currentVolume = volume;
-        float difference = target - currentVolume;
-        float changeAmount = (difference / steps);
+        float currentPan = pan;
+        if (gain) {
+            while (volumeFading) {
+                Thread.sleep(100);
+            }
+            volumeFading = true;
+            float difference = target - currentVolume;
+            changeAmount = (difference / steps);
+        } else {
+            while (panFading) {
+                Thread.sleep(100);
+            }
+            panFading = true;
+            float difference = target - currentPan;
+            changeAmount = (difference / steps);
+        }
         for (int i = 0; i < steps; i++) {
-            currentVolume = currentVolume + changeAmount;
-            player.setGain(currentVolume);
+            if (gain) {
+                currentVolume = currentVolume + changeAmount;
+                player.setGain(currentVolume);
+            } else {
+                currentPan = currentPan + changeAmount;
+                player.setPan(currentPan);
+            }
             Thread.sleep(2000 / steps);
         }
-        volume = target;
-        player.setGain(target);
-        volumeFading = false;
+        if (gain) {
+            volume = target;
+            player.setGain(target);
+            volumeFading = false;
+        } else {
+            pan = target;
+            player.setPan(target);
+            panFading = false;
+        }
     }
 
     private void startSongPlayback(Song song) {
