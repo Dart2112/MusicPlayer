@@ -47,6 +47,12 @@ class MusicPlayer implements BasicPlayerListener {
                             player.stop();
                             playNextSong();
                             break;
+                        case "back":
+                        case "<":
+                            player.seek(0);
+                            player.setPan(pan);
+                            player.setGain(volume);
+                            break;
                         case "volume":
                         case "v":
                             float i = Float.parseFloat(input.split(" ")[1]);
@@ -126,6 +132,7 @@ class MusicPlayer implements BasicPlayerListener {
                 player.open(song.getFile());
                 player.play();
                 player.setGain(volume);
+                player.setPan(pan);
             } catch (BasicPlayerException e) {
                 e.printStackTrace();
             }
