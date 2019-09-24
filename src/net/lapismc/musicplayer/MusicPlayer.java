@@ -13,12 +13,12 @@ import java.util.Scanner;
 class MusicPlayer implements BasicPlayerListener {
 
     private BasicPlayer player = new BasicPlayer();
+    private Song nowPlaying;
     private List<Shuffleable> playlist = new ArrayList<>();
     private boolean volumeFading = false;
     private boolean panFading;
     private float volume = 0.25f;
     private float pan = 0.5f;
-    private String musicPath = "/home/benjamin/Music/";
 
     MusicPlayer() {
         player.addBasicPlayerListener(this);
@@ -35,11 +35,12 @@ class MusicPlayer implements BasicPlayerListener {
                     switch (input.split(" ")[0]) {
                         case "play":
                             player.resume();
-                            System.out.println("Resumed playback");
+                            System.out.println("Now Playing: " + nowPlaying.getTitle() + " - "
+                                    + nowPlaying.getArtist(false));
                             break;
                         case "pause":
                             player.pause();
-                            System.out.println("Paused playback");
+                            System.out.println("Paused");
                             break;
                         case "skip":
                         case "next":
@@ -52,6 +53,8 @@ class MusicPlayer implements BasicPlayerListener {
                             player.seek(0);
                             player.setPan(pan);
                             player.setGain(volume);
+                            System.out.println("Now Playing: " + nowPlaying.getTitle() + " - "
+                                    + nowPlaying.getArtist(false));
                             break;
                         case "volume":
                         case "v":
@@ -82,11 +85,11 @@ class MusicPlayer implements BasicPlayerListener {
 
     private void fade(float target, boolean gain) throws BasicPlayerException, InterruptedException {
         if (gain) {
-            target = Math.max(0.01f, Math.min(.999f, target));
+            target = Math.max(0.10f, Math.min(.999f, target));
         } else {
             target = Math.max(-.999f, Math.min(.999f, target));
         }
-        int steps = 25;
+        int steps = 50;
         float changeAmount;
         float currentVolume = volume;
         float currentPan = pan;
@@ -129,7 +132,8 @@ class MusicPlayer implements BasicPlayerListener {
     private void startSongPlayback(Song song) {
         new Thread(() -> {
             try {
-                player.open(song.getFile());
+                nowPlaying = song;
+                player.open(nowPlaying.getFile());
                 player.play();
                 player.setGain(volume);
                 player.setPan(pan);
@@ -158,6 +162,8 @@ class MusicPlayer implements BasicPlayerListener {
 
     private void repopulatePlaylist() {
         System.out.print("Shuffling to get the next 20 songs, skipping now may cause errors \r");
+        //TODO: make this changeable
+        String musicPath = "/home/benjamin/Music/";
         List<Shuffleable> songList = new ArrayList<>(addDir(new File(musicPath)));
         playlist = new PartialShuffle().shuffle(songList, 20f, 20);
         System.out.println("Shuffle complete, it is now safe to skip tracks");
