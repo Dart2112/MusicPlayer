@@ -65,8 +65,8 @@ class MusicPlayer implements BasicPlayerListener {
                         default:
                             System.out.println("Command Unknown");
                     }
-                } catch (BasicPlayerException | InterruptedException | IllegalArgumentException ignored) {
-
+                } catch (BasicPlayerException | InterruptedException | IllegalArgumentException e) {
+                    e.printStackTrace();
                 } catch (ArrayIndexOutOfBoundsException e) {
                     System.out.println("Please enter a valid volume (0-100)");
                 }
@@ -76,9 +76,9 @@ class MusicPlayer implements BasicPlayerListener {
 
     private void fade(float target, boolean gain) throws BasicPlayerException, InterruptedException {
         if (gain) {
-            target = Math.max(0.01f, Math.min(1.0f, target));
+            target = Math.max(0.01f, Math.min(.999f, target));
         } else {
-            target = Math.max(-1.0f, Math.min(1.0f, target));
+            target = Math.max(-.999f, Math.min(.999f, target));
         }
         int steps = 25;
         float changeAmount;
