@@ -14,6 +14,7 @@ class MusicPlayer implements BasicPlayerListener {
 
     private BasicPlayer player = new BasicPlayer();
     private List<Shuffleable> playlist = new ArrayList<>();
+    private boolean volumeFading = false;
     private float volume = 0.25f;
     private String musicPath = "/home/benjamin/Music/";
 
@@ -47,8 +48,7 @@ class MusicPlayer implements BasicPlayerListener {
                         case "volume":
                         case "v":
                             float i = Float.parseFloat(input.split(" ")[1]);
-                            volume = i / 100f;
-                            player.setGain(volume);
+                            fadeToGain(i / 100f);
                             break;
                         case "stop":
                         case "kill":
@@ -58,13 +58,33 @@ class MusicPlayer implements BasicPlayerListener {
                         default:
                             System.out.println("Command Unknown");
                     }
-                } catch (BasicPlayerException e) {
+                } catch (BasicPlayerException | InterruptedException e) {
                     e.printStackTrace();
                 } catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
                     System.out.println("Please enter a valid volume (0-100)");
                 }
             }
         };
+    }
+
+    private void fadeToGain(float target) throws BasicPlayerException, InterruptedException {
+        target = Math.max(0.01f, Math.min(1.0f, target));
+        int steps = 25;
+        while (volumeFading) {
+            Thread.sleep(100);
+        }
+        volumeFading = true;
+        float currentVolume = volume;
+        float difference = target - currentVolume;
+        float changeAmount = (difference / steps);
+        for (int i = 0; i < steps; i++) {
+            currentVolume = currentVolume + changeAmount;
+            player.setGain(currentVolume);
+            Thread.sleep(2000 / steps);
+        }
+        volume = target;
+        player.setGain(target);
+        volumeFading = false;
     }
 
     private void startSongPlayback(Song song) {
