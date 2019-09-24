@@ -103,6 +103,10 @@ class MusicPlayer implements BasicPlayerListener {
         if (playlist.isEmpty()) {
             repopulatePlaylist();
         }
+        if (playlist.isEmpty()) {
+            System.out.println("No Songs Loaded");
+            System.exit(0);
+        }
         Song s = (Song) playlist.get(0);
         System.out.println("Now Playing: " + s.getTitle() + " - " + s.getArtist(false));
         if (playlist.size() == 1) {
@@ -114,14 +118,21 @@ class MusicPlayer implements BasicPlayerListener {
 
     private void repopulatePlaylist() {
         System.out.print("Shuffling to get the next 20 songs, skipping now may cause errors \r");
-        List<Shuffleable> songList = new ArrayList<>();
-        //noinspection ConstantConditions
-        for (File f : new File(musicPath).listFiles()) {
-            if (f.getName().endsWith("mp3"))
-                songList.add(new SongBuilder().fromFile(f).build());
-        }
+        List<Shuffleable> songList = new ArrayList<>(addDir(new File(musicPath)));
         playlist = new PartialShuffle().shuffle(songList, 20f, 20);
         System.out.println("Shuffle complete, it is now safe to skip tracks");
+    }
+
+    private List<Shuffleable> addDir(File dir) {
+        List<Shuffleable> list = new ArrayList<>();
+        //noinspection ConstantConditions
+        for (File f : dir.listFiles()) {
+            if (f.getName().endsWith("mp3"))
+                list.add(new SongBuilder().fromFile(f).build());
+            if (f.isDirectory())
+                list.addAll(addDir(f));
+        }
+        return list;
     }
 
     public void stateUpdated(BasicPlayerEvent event) {
