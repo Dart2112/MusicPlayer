@@ -14,6 +14,7 @@ class MusicPlayer implements BasicPlayerListener {
 
     private BasicPlayer player = new BasicPlayer();
     private Song nowPlaying;
+    private PartialShuffle shuffler = new PartialShuffle();
     private List<Shuffleable> playlist = new ArrayList<>();
     private boolean volumeFading = false;
     private boolean panFading;
@@ -165,7 +166,7 @@ class MusicPlayer implements BasicPlayerListener {
         //TODO: make this changeable
         String musicPath = "/home/benjamin/Music/";
         List<Shuffleable> songList = new ArrayList<>(addDir(new File(musicPath)));
-        playlist = new PartialShuffle().shuffle(songList, 20f, 20);
+        playlist = shuffler.shuffle(songList, 20f, 20);
         System.out.println("Shuffle complete, it is now safe to skip tracks");
     }
 
