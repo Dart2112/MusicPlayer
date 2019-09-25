@@ -19,7 +19,7 @@ class MusicPlayer implements BasicPlayerListener {
     private boolean volumeFading = false;
     private boolean panFading;
     private float volume = 0.25f;
-    private float pan = 0.5f;
+    private float pan = 0f;
 
     MusicPlayer() {
         player.addBasicPlayerListener(this);
